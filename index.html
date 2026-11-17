@@ -387,12 +387,20 @@
   // ---------- Test modu: sahte izleyiciler ----------
   if (TEST) {
     $("#durum .test").style.display = "inline";
-    const adlar = ["martı34", "kebapsever", "irl_fan", "gezgin", "simitci_ali", "kadikoylu", "yayinkurdu", "zeynep_k", "pepsihepsi", "turbo_tosun"];
-    const renkler = ["#FF9D00", "#00CCB3", "#BC66FF", "#FF6B6B", "#93EBFF", null];
+    // Kaç sahte at katılsın: ?atsayisi=40 (varsayılan 40, en fazla enFazlaAt)
+    const hedefAt = Math.min(A.enFazlaAt, +(q.get("atsayisi") || 40));
+    const kokler = ["martı", "kebapsever", "irl_fan", "gezgin", "simitci", "kadikoylu", "yayinkurdu", "zeynep", "pepsihepsi", "turbo_tosun",
+      "boncuk", "tarcin", "karayel", "simsek", "firtina", "kanka", "reis", "kral", "efsane", "gece_kusu"];
+    const adlar = Array.from({ length: 60 }, (_, i) => kokler[i % kokler.length] + (i < kokler.length ? "" : "_" + (10 + i)));
+    const renkler = ["#FF9D00", "#00CCB3", "#BC66FF", "#FF6B6B", "#93EBFF", "#FFD23F", "#7CFF6B", null];
     setInterval(() => {
-      if (faz === "katilma" && atlar.length < 7 && Math.random() < .5) {
-        const ad = adlar.find(a => !atlar.some(x => x.ad === a));
-        if (ad) mesajGeldi(ad, "!at", renkler[Math.floor(Math.random() * renkler.length)], []);
+      if (faz === "katilma") {
+        // katılım süresine yayarak hedef sayıya ulaş
+        const adet = Math.max(1, Math.ceil(hedefAt / Math.max(1, A.katilmaSuresi * 2 - 2)));
+        for (let k = 0; k < adet && atlar.length < hedefAt; k++) {
+          const ad = adlar.find(a => !atlar.some(x => x.ad === a));
+          if (ad) mesajGeldi(ad, "!at", renkler[Math.floor(Math.random() * renkler.length)], []);
+        }
       }
       if (faz === "yaris") atlar.forEach((at, i) => { if (Math.random() < .12 + i * .02) mesajGeldi(at.ad, "koş!"); });
     }, 500);
