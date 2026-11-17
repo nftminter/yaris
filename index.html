@@ -46,6 +46,24 @@
   .serit.hizli .at .toz { opacity:1; }
   .serit .sira { position:absolute; left:1.4rem; top:50%; transform:translateY(-50%); font-weight:900; font-size:min(3rem, calc(var(--h) * .4));
     color:rgba(255,255,255,.18); }
+  .serit .at .etiket { display:none; }
+
+  /* Kalabalık mod (12'den fazla at): pist iki sütun, nick atın yanında gider, skor tablosu alta tek satır */
+  #kart.kalabalik .govde { grid-template-columns:minmax(0, 1fr); }
+  #kart.kalabalik .sag { display:none; }
+  #kart.kalabalik #pist { height:52rem; display:grid; grid-auto-flow:column; grid-template-columns:repeat(var(--sutun, 2), minmax(0, 1fr));
+    grid-template-rows:repeat(var(--satir), var(--h)); column-gap:3rem; row-gap:.3rem; align-content:center; }
+  #kart.kalabalik .serit { grid-template-columns:minmax(0, 1fr); animation:none; }
+  #kart.kalabalik .serit .ad, #kart.kalabalik .serit .sira { display:none; }
+  #kart.kalabalik .serit .yol { border-radius:.6rem; }
+  #kart.kalabalik .serit .bitis { width:1.4rem; background-size:.7rem .7rem; }
+  #kart.kalabalik .serit .at { font-size:calc(var(--h) * .9); filter:none; }
+  #kart.kalabalik .serit .at .etiket { display:inline; font-size:.68em; font-weight:800; color:var(--renk); margin-left:.25em;
+    vertical-align:.12em; text-shadow:0 0 .4em #000, 0 0 .2em #000; }
+  #serit-skor { display:none; margin-top:1.4rem; font-size:3rem; color:var(--soluk); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #serit-skor b { color:#fff; }
+  #kart.kalabalik #serit-skor { display:block; }
+
   #pist.bitti .serit { opacity:.3; filter:grayscale(.8); }
   #pist.bitti .serit.podyum { opacity:1; filter:none; }
   @keyframes gir { from { opacity:0; transform:translateX(-3rem); } to { opacity:1; transform:none; } }
@@ -102,11 +120,12 @@
     <div>
       <div id="pist"></div>
       <div id="spiker"></div>
+      <div id="serit-skor"></div>
     </div>
     <div class="sag">
       <h3>Skor tablosu</h3>
       <ol id="skorlar"></ol>
-      <div class="nasil">Chat'e <b id="komut-yazi">!at</b> yaz, kendi atınla yarışa gir. Yarışta chat'e yazdıkça atın hızlanır!</div>
+      <div class="nasil">Chat'e <b id="komut-yazi">!at</b> yaz, kendi atınla yarışa gir. <span id="nasil-ek">Kazanan şansa bağlı!</span></div>
       <div id="durum"><i></i><span>Chat bağlanıyor…</span><span class="test">TEST</span></div>
     </div>
   </div>
@@ -116,14 +135,15 @@
 <script src="kick-chat.js"></script>
 <script>
 (() => {
-  const A = Object.assign({ kanal: "", chatroomId: "", katilmaKomutu: "!at", katilmaSuresi: 30, enFazlaAt: 10,
-    sonrakiYaris: 12, puanlar: [10, 5, 3], tezahuratEtkisi: 1, modlarSifirlayabilir: true, yetkililer: [] }, window.OYUN_AYAR || {});
+  const A = Object.assign({ kanal: "", chatroomId: "", katilmaKomutu: "!at", katilmaSuresi: 30, enFazlaAt: 50,
+    sonrakiYaris: 12, puanlar: [10, 5, 3], tezahuratEtkisi: 0, modlarSifirlayabilir: true, yetkililer: [] }, window.OYUN_AYAR || {});
   const q = new URLSearchParams(location.search);
   if (q.get("katilma")) A.katilmaSuresi = +q.get("katilma");
   const TEST = q.has("test");
   const $ = s => document.querySelector(s);
   if (!window.obsstudio) document.body.classList.add("tarayici");
   $("#komut-yazi").textContent = A.katilmaKomutu;
+  if (A.tezahuratEtkisi > 0) $("#nasil-ek").textContent = "Yarışta chat'e yazdıkça atın hızlanır!";
 
   const HARF = { "ç": "c", "ğ": "g", "ı": "i", "ö": "o", "ş": "s", "ü": "u", "â": "a", "î": "i", "û": "u" };
   const sade = s => s.toLocaleLowerCase("tr").replace(/[çğıöşüâîû]/g, c => HARF[c]).replace(/[^a-z0-9]/g, "");
@@ -137,6 +157,10 @@
   const skorKaydet = () => { try { localStorage.setItem(ANAHTAR, JSON.stringify(skor)); } catch (e) {} };
   function skorCiz(yeniler = []) {
     const liste = Object.entries(skor).sort((a, b) => b[1] - a[1]).slice(0, 6);
+    // Kalabalık modda alttaki tek satırlık skor
+    $("#serit-skor").innerHTML = liste.length
+      ? "🏆 " + liste.slice(0, 5).map(([ad, p], i) => `${i + 1}. <b>${kacir(ad)}</b> ${p}`).join(" · ")
+      : "🏆 Henüz yarış kazanan yok";
     const ol = $("#skorlar");
     ol.innerHTML = "";
     if (!liste.length) { ol.innerHTML = '<div class="bos">Henüz yarış kazanan yok.</div>'; return; }
@@ -187,19 +211,29 @@
     const pist = $("#pist");
     pist.classList.remove("bitti");
     if (!atlar.length) {
+      $("#kart").classList.remove("kalabalik");
       pist.innerHTML = `<div class="bos">Henüz kimse yok.<br>Yarışa girmek için chat'e <b>${kacir(A.katilmaKomutu)}</b> yaz!</div>`;
       return;
     }
-    const n = atlar.length;
-    pist.style.setProperty("--h", Math.min(12, (54 - (n - 1) * .8) / n) + "rem");
+    const n = atlar.length, kalabalik = n > 12;
+    $("#kart").classList.toggle("kalabalik", kalabalik);
+    if (kalabalik) {
+      const sutun = n > 30 ? 3 : 2, satir = Math.ceil(n / sutun);
+      pist.style.setProperty("--sutun", sutun);
+      pist.style.setProperty("--satir", satir);
+      pist.style.setProperty("--h", Math.min(4.2, (52 - (satir - 1) * .3) / satir) + "rem");
+    } else {
+      pist.style.setProperty("--h", Math.min(12, (54 - (n - 1) * .8) / n) + "rem");
+    }
     atlar.forEach((at, i) => {
       if (at.el) return; // zaten çizildi
       const s = document.createElement("div");
       s.className = "serit";
       s.style.setProperty("--renk", at.renk);
       s.innerHTML = `<div class="ad"></div><div class="yol"><span class="sira">${i + 1}</span><div class="bitis"></div>
-        <div class="at"><span class="toz">💨</span><span class="govdeat">🏇</span></div></div>`;
+        <div class="at"><span class="toz">💨</span><span class="govdeat">🏇</span><span class="etiket"></span></div></div>`;
       s.querySelector(".ad").textContent = at.ad;
+      s.querySelector(".etiket").textContent = at.ad;
       at.el = s; at.atEl = s.querySelector(".at");
       pist.querySelector(".bos")?.remove();
       pist.appendChild(s);
@@ -269,7 +303,9 @@
   function yarisBaslat() {
     faz = "yaris"; lider = null; sonSpiker = Date.now(); yarisBasi = Date.now();
     fazYaz("YARIŞ", true);
-    $("#bilgi-yazi").innerHTML = "Atın varsa <b>chat'e yaz</b>, yazdıkça hızlanır!";
+    $("#bilgi-yazi").innerHTML = A.tezahuratEtkisi > 0
+      ? "Atın varsa <b>chat'e yaz</b>, yazdıkça hızlanır!"
+      : "Atlar koşuyor! Kazanan <b>şansa bağlı</b>";
     clearInterval(zaman);
     zaman = setInterval(yarisTik, 100);
   }
@@ -278,7 +314,7 @@
     const simdi = Date.now();
     for (const at of atlar) {
       at.form = Math.min(1.45, Math.max(.55, at.form + (Math.random() - .5) * .12)); // form iniş çıkışı
-      const hizli = simdi - at.sonYazi < 3000;
+      const hizli = A.tezahuratEtkisi > 0 && simdi - at.sonYazi < 3000;
       at.el.classList.toggle("hizli", hizli);
       at.p += (.42 * at.form + (hizli ? .28 * A.tezahuratEtkisi : 0)) * (.85 + Math.random() * .3);
       konumla(at);

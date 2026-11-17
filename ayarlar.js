@@ -1,5 +1,5 @@
 // At Yarışı — ayarlar. Not Defteri ile düzenleyebilirsin.
-// Chat'e "!at" yazan yarışa kendi atıyla katılır; yarışta chat'e yazdıkça kendi atı hızlanır.
+// Chat'e "!at" yazan yarışa kendi atıyla katılır; kazanan şansa bağlı.
 
 window.OYUN_AYAR = {
   kanal: "irlandas",
@@ -11,8 +11,8 @@ window.OYUN_AYAR = {
   // Katılma süresi, saniye
   katilmaSuresi: 30,
 
-  // Bir yarışta en fazla kaç at (ilk yazanlar girer)
-  enFazlaAt: 10,
+  // Bir yarışta en fazla kaç at (ilk yazanlar girer). 12'den fazla olunca pist iki sütuna geçer.
+  enFazlaAt: 50,
 
   // Yarış bitince yeni yarışa kaç saniye sonra geçilsin
   sonrakiYaris: 12,
@@ -20,8 +20,8 @@ window.OYUN_AYAR = {
   // 1., 2. ve 3. olanların puanı
   puanlar: [10, 5, 3],
 
-  // Chat'e yazmanın atı hızlandırma gücü. 0 = etkisiz, 1 = normal, 2 = çok etkili
-  tezahuratEtkisi: 1,
+  // Chat'e yazmak atı hızlandırsın mı? 0 = hayır, kazanan tamamen şansa bağlı. 1 = yazdıkça hızlanır.
+  tezahuratEtkisi: 0,
 
   // Chat'e "!sifirla" yazınca skorları kim sıfırlayabilir: kanal sahibi her zaman, modlar da (false yaparsan modlar yapamaz)
   modlarSifirlayabilir: true,
