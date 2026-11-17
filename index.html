@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>At Yarışı</title>
+<style>
+  :root { --yesil:#53fc18; --kart:rgba(14,16,19,.92); --zemin:#1d2227; --soluk:#9aa4ad; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  /* Ölçek: pencerenin genişliği ya da yüksekliği, hangisi darsa. OBS'te yatay kaynak önerilir (ör. 1280x720) */
+  html { font-size:min(calc(100vw / 160), calc(100vh / 100)); }
+  html, body { width:100%; height:100%; overflow:hidden; background:transparent;
+    font-family:"Segoe UI", Inter, Arial, sans-serif; color:#fff; }
+  body { font-size:3.6rem; }
+  body.tarayici { background:#0b0d10; }
+
+  #kart { position:relative; overflow:hidden; width:156rem; margin:2rem auto; background:var(--kart); border-radius:4rem;
+    padding:3.4rem 5rem; border:.4rem solid rgba(255,255,255,.06); box-shadow:0 2rem 6rem rgba(0,0,0,.4); }
+  header { display:flex; align-items:center; gap:3rem; }
+  .logo { font-weight:900; font-size:6.4rem; letter-spacing:-.03em; line-height:1; }
+  .logo span { color:var(--yesil); }
+  #faz { margin-left:auto; background:var(--zemin); font-weight:800; font-size:3.4rem; padding:1.4rem 3rem; border-radius:10rem; white-space:nowrap; }
+  #faz.yaris { background:var(--yesil); color:#000; }
+
+  #bilgi { display:flex; justify-content:space-between; align-items:baseline; gap:2rem; margin-top:1.8rem; font-size:3.6rem; color:var(--soluk); }
+  #bilgi b { color:#fff; }
+  #bilgi .komut { color:var(--yesil); font-weight:900; }
+  .ilerleme { height:1.2rem; background:var(--zemin); border-radius:2rem; overflow:hidden; margin-top:1.6rem; }
+  .ilerleme i { display:block; height:100%; width:0; background:var(--soluk); }
+
+  .govde { display:grid; grid-template-columns:minmax(0, 1fr) 38rem; gap:5rem; margin-top:2.4rem; align-items:start; }
+  #pist { height:54rem; display:flex; flex-direction:column; justify-content:center; gap:.8rem; }
+  #pist .bos { margin:auto; color:var(--soluk); font-size:4.4rem; text-align:center; line-height:1.4; }
+  #pist .bos b { color:var(--yesil); }
+  .serit { flex:0 0 var(--h); display:grid; grid-template-columns:26rem minmax(0, 1fr); align-items:center; gap:1.6rem;
+    transition:opacity .4s, filter .4s; animation:gir .35s ease-out; }
+  .serit .ad { font-weight:800; font-size:min(3.6rem, calc(var(--h) * .5)); white-space:nowrap; overflow:hidden;
+    text-overflow:ellipsis; color:var(--renk); text-align:right; }
+  .serit .yol { position:relative; height:100%; border-radius:1.2rem;
+    background:repeating-linear-gradient(90deg, var(--zemin) 0 6rem, #191d21 6rem 12rem); }
+  .serit .bitis { position:absolute; right:0; top:0; bottom:0; width:2.4rem; border-radius:0 1.2rem 1.2rem 0; opacity:.85;
+    background:repeating-conic-gradient(#fff 0 25%, #111 0 50%) 0 0 / 1.2rem 1.2rem; }
+  .serit .at { position:absolute; top:50%; left:0; transform:translate(0, -50%); white-space:nowrap; line-height:1;
+    font-size:calc(var(--h) * .8); filter:drop-shadow(0 0 1rem var(--renk)); }
+  .serit .at .govdeat { display:inline-block; transform:scaleX(-1); }
+  .serit .at .toz { font-size:.55em; opacity:0; transition:opacity .2s; margin-right:.1em; }
+  .serit.hizli .at .toz { opacity:1; }
+  .serit .sira { position:absolute; left:1.4rem; top:50%; transform:translateY(-50%); font-weight:900; font-size:min(3rem, calc(var(--h) * .4));
+    color:rgba(255,255,255,.18); }
+  #pist.bitti .serit { opacity:.3; filter:grayscale(.8); }
+  #pist.bitti .serit.podyum { opacity:1; filter:none; }
+  @keyframes gir { from { opacity:0; transform:translateX(-3rem); } to { opacity:1; transform:none; } }
+
+  #spiker { margin-top:2.4rem; min-height:7rem; font-size:4.6rem; font-weight:900; text-align:center; display:flex;
+    align-items:center; justify-content:center; gap:4rem; flex-wrap:wrap; }
+  #spiker.pop { animation:pop .5s ease-out; }
+  #spiker .k { color:var(--renk, var(--yesil)); }
+  #spiker .p { color:var(--soluk); font-size:3.6rem; }
+  #spiker { flex-wrap:nowrap; overflow:hidden; }
+  #spiker .pd { flex:0 1 auto; min-width:0; max-width:33%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #spiker > .k, #spiker > span:not(.pd) { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  @keyframes pop { 0% { transform:scale(.6); opacity:0; } 70% { transform:scale(1.08); } 100% { transform:scale(1); opacity:1; } }
+
+  .sag { border-left:.3rem solid rgba(255,255,255,.06); padding-left:4rem; display:flex; flex-direction:column; align-self:stretch; }
+  h3 { font-size:3.2rem; color:var(--soluk); text-transform:uppercase; letter-spacing:.1em; margin-bottom:1.6rem; }
+  #skorlar { list-style:none; display:flex; flex-direction:column; gap:.8rem; }
+  #skorlar li { display:grid; grid-template-columns:5rem 1fr auto; align-items:center; font-size:3.4rem; padding:.8rem 1.6rem; border-radius:1.4rem; }
+  #skorlar li:nth-child(1) { background:rgba(83,252,24,.14); }
+  #skorlar li .s { color:var(--soluk); font-weight:800; }
+  #skorlar li:nth-child(1) .s { color:var(--yesil); }
+  #skorlar li .a { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:700; }
+  #skorlar li .p { font-weight:900; font-variant-numeric:tabular-nums; }
+  #skorlar li.yeni { animation:parla 1.2s ease-out; }
+  @keyframes parla { 0% { background:rgba(83,252,24,.5); } 100% { } }
+  #skorlar .bos { color:var(--soluk); font-size:3.2rem; }
+  .nasil { margin-top:auto; font-size:2.8rem; color:var(--soluk); line-height:1.45; }
+  .nasil b { color:#fff; }
+  #durum { margin-top:2rem; font-size:2.6rem; color:var(--soluk); display:flex; align-items:center; gap:1.2rem; }
+  #durum i { width:1.8rem; height:1.8rem; border-radius:50%; background:#c33; display:inline-block; flex:none; }
+  #durum.bagli i { background:var(--yesil); }
+  #durum .test { background:#c90; color:#000; font-weight:800; padding:.2rem 1.4rem; border-radius:.8rem; margin-left:auto; display:none; }
+
+  #bildirim { position:absolute; top:2rem; left:50%; z-index:5; transform:translate(-50%, -12rem); white-space:nowrap;
+    background:#fff; color:#111; font-weight:800; font-size:3.4rem; padding:1.2rem 3rem; border-radius:10rem;
+    box-shadow:0 1rem 3rem rgba(0,0,0,.4); transition:transform .35s ease; }
+  #bildirim.acik { transform:translate(-50%, 0); }
+  .konfeti { position:absolute; top:-3rem; width:1.6rem; height:2.6rem; border-radius:.4rem; pointer-events:none; z-index:4;
+    animation:dus var(--sure, 1.8s) cubic-bezier(.3, .6, .6, 1) forwards; }
+  @keyframes dus { to { transform:translate(var(--x, 0), 110rem) rotate(var(--r, 540deg)); opacity:.2; } }
+</style>
+</head>
+<body>
+<div id="kart">
+  <div id="bildirim"></div>
+  <header>
+    <div class="logo">AT <span>YARIŞI</span></div>
+    <div id="faz">KATILIM</div>
+  </header>
+  <div id="bilgi"><span id="bilgi-yazi"></span><span id="bilgi-sag"></span></div>
+  <div class="ilerleme"><i id="ilerleme"></i></div>
+
+  <div class="govde">
+    <div>
+      <div id="pist"></div>
+      <div id="spiker"></div>
+    </div>
+    <div class="sag">
+      <h3>Skor tablosu</h3>
+      <ol id="skorlar"></ol>
+      <div class="nasil">Chat'e <b id="komut-yazi">!at</b> yaz, kendi atınla yarışa gir. Yarışta chat'e yazdıkça atın hızlanır!</div>
+      <div id="durum"><i></i><span>Chat bağlanıyor…</span><span class="test">TEST</span></div>
+    </div>
+  </div>
+</div>
+
+<script src="ayarlar.js"></script>
+<script src="kick-chat.js"></script>
+<script>
+(() => {
+  const A = Object.assign({ kanal: "", chatroomId: "", katilmaKomutu: "!at", katilmaSuresi: 30, enFazlaAt: 10,
+    sonrakiYaris: 12, puanlar: [10, 5, 3], tezahuratEtkisi: 1, modlarSifirlayabilir: true, yetkililer: [] }, window.OYUN_AYAR || {});
+  const q = new URLSearchParams(location.search);
+  if (q.get("katilma")) A.katilmaSuresi = +q.get("katilma");
+  const TEST = q.has("test");
+  const $ = s => document.querySelector(s);
+  if (!window.obsstudio) document.body.classList.add("tarayici");
+  $("#komut-yazi").textContent = A.katilmaKomutu;
+
+  const HARF = { "ç": "c", "ğ": "g", "ı": "i", "ö": "o", "ş": "s", "ü": "u", "â": "a", "î": "i", "û": "u" };
+  const sade = s => s.toLocaleLowerCase("tr").replace(/[çğıöşüâîû]/g, c => HARF[c]).replace(/[^a-z0-9]/g, "");
+  const PALET = ["#ffd23f", "#4fc3ff", "#ff5ea8", "#ff9d3d", "#b18cff", "#53fc18", "#ff6b6b", "#00ccb3", "#f2f2f2", "#c0ff6b"];
+  const gecerliRenk = r => typeof r === "string" && /^#[0-9a-f]{3,8}$/i.test(r);
+
+  // ---------- Skorlar (test modu ayrı tutulur; ?sifirla=1 temizler) ----------
+  const ANAHTAR = TEST ? "atYarisi.skor.test" : "atYarisi.skor.v1";
+  let skor = {};
+  try { if (q.has("sifirla")) localStorage.removeItem(ANAHTAR); skor = JSON.parse(localStorage.getItem(ANAHTAR) || "{}"); } catch (e) { skor = {}; }
+  const skorKaydet = () => { try { localStorage.setItem(ANAHTAR, JSON.stringify(skor)); } catch (e) {} };
+  function skorCiz(yeniler = []) {
+    const liste = Object.entries(skor).sort((a, b) => b[1] - a[1]).slice(0, 6);
+    const ol = $("#skorlar");
+    ol.innerHTML = "";
+    if (!liste.length) { ol.innerHTML = '<div class="bos">Henüz yarış kazanan yok.</div>'; return; }
+    liste.forEach(([ad, p], i) => {
+      const li = document.createElement("li");
+      if (yeniler.includes(ad)) li.className = "yeni";
+      li.innerHTML = `<span class="s">${i + 1}.</span><span class="a"></span><span class="p">${p}</span>`;
+      li.querySelector(".a").textContent = ad;
+      ol.appendChild(li);
+    });
+  }
+
+  // ---------- Yardımcılar ----------
+  function spiker(html, pop = true) {
+    const s = $("#spiker");
+    s.innerHTML = html;
+    if (pop) { s.classList.remove("pop"); void s.offsetWidth; s.classList.add("pop"); }
+  }
+  const kacir = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  function bildir(yazi) {
+    const b = $("#bildirim");
+    b.textContent = yazi;
+    b.classList.remove("acik"); void b.offsetWidth; b.classList.add("acik");
+    clearTimeout(bildir.z); bildir.z = setTimeout(() => b.classList.remove("acik"), 4000);
+  }
+  function konfeti(renkler) {
+    const kart = $("#kart");
+    for (let i = 0; i < 50; i++) {
+      const c = document.createElement("i");
+      c.className = "konfeti";
+      c.style.left = Math.random() * 100 + "%";
+      c.style.background = renkler[i % renkler.length];
+      c.style.setProperty("--x", (Math.random() * 40 - 20) + "rem");
+      c.style.setProperty("--r", (Math.random() * 900 - 450) + "deg");
+      c.style.setProperty("--sure", (1.4 + Math.random() * 1.4) + "s");
+      c.style.animationDelay = Math.random() * .4 + "s";
+      kart.appendChild(c);
+      setTimeout(() => c.remove(), 3500);
+    }
+  }
+
+  // ---------- Oyun durumu ----------
+  let faz = "katilma", atlar = [], bitis = 0, zaman = null, lider = null, sonSpiker = 0, yarisBasi = 0;
+
+  function fazYaz(yazi, yaris) { $("#faz").textContent = yazi; $("#faz").classList.toggle("yaris", !!yaris); }
+
+  function pistCiz() {
+    const pist = $("#pist");
+    pist.classList.remove("bitti");
+    if (!atlar.length) {
+      pist.innerHTML = `<div class="bos">Henüz kimse yok.<br>Yarışa girmek için chat'e <b>${kacir(A.katilmaKomutu)}</b> yaz!</div>`;
+      return;
+    }
+    const n = atlar.length;
+    pist.style.setProperty("--h", Math.min(12, (54 - (n - 1) * .8) / n) + "rem");
+    atlar.forEach((at, i) => {
+      if (at.el) return; // zaten çizildi
+      const s = document.createElement("div");
+      s.className = "serit";
+      s.style.setProperty("--renk", at.renk);
+      s.innerHTML = `<div class="ad"></div><div class="yol"><span class="sira">${i + 1}</span><div class="bitis"></div>
+        <div class="at"><span class="toz">💨</span><span class="govdeat">🏇</span></div></div>`;
+      s.querySelector(".ad").textContent = at.ad;
+      at.el = s; at.atEl = s.querySelector(".at");
+      pist.querySelector(".bos")?.remove();
+      pist.appendChild(s);
+    });
+    atlar.forEach(konumla);
+  }
+
+  function konumla(at) {
+    const p = Math.min(100, at.p);
+    at.atEl.style.left = p + "%";
+    at.atEl.style.transform = `translate(-${p}%, -50%)`;
+  }
+
+  // ---------- Katılım ----------
+  function katilmaBaslat(sureyiUzat) {
+    faz = "katilma";
+    if (!sureyiUzat) { atlar = []; $("#pist").innerHTML = ""; spiker(""); }
+    bitis = Date.now() + A.katilmaSuresi * 1000;
+    fazYaz("KATILIM");
+    pistCiz();
+    clearInterval(zaman);
+    zaman = setInterval(katilmaTik, 200);
+    katilmaTik();
+  }
+
+  function katilmaTik() {
+    const kalan = Math.max(0, bitis - Date.now());
+    $("#ilerleme").style.width = (kalan / (A.katilmaSuresi * 1000) * 100) + "%";
+    $("#bilgi-yazi").innerHTML = `Yarışa girmek için chat'e <span class="komut">${kacir(A.katilmaKomutu)}</span> yaz`;
+    $("#bilgi-sag").innerHTML = `<b>${atlar.length}/${A.enFazlaAt}</b> at · <b>${Math.ceil(kalan / 1000)}</b> sn`;
+    if (kalan > 0) return;
+    clearInterval(zaman);
+    if (atlar.length < 2) {
+      spiker("En az 2 at lazım! Katılım süresi uzatıldı.");
+      katilmaBaslat(true);
+    } else {
+      geriSay();
+    }
+  }
+
+  function atEkle(ad, renk) {
+    if (faz !== "katilma" || atlar.length >= A.enFazlaAt) return;
+    if (atlar.some(a => a.ad.toLowerCase() === ad.toLowerCase())) return;
+    atlar.push({ ad, renk: gecerliRenk(renk) ? renk : PALET[atlar.length % PALET.length], p: 0, form: 1, sonYazi: 0 });
+    pistCiz();
+    katilmaTik();
+    spiker(`<span class="k" style="--renk:${atlar[atlar.length - 1].renk}">${kacir(ad)}</span> yarışa katıldı!`);
+  }
+
+  // ---------- Yarış ----------
+  function geriSay() {
+    faz = "geri";
+    fazYaz("HAZIR OL");
+    $("#bilgi-yazi").innerHTML = "Atlar çizgide…";
+    $("#bilgi-sag").innerHTML = `<b>${atlar.length}</b> at`;
+    let n = 3;
+    spiker(`<span style="font-size:7rem">${n}</span>`);
+    const t = setInterval(() => {
+      n--;
+      if (n > 0) { spiker(`<span style="font-size:7rem">${n}</span>`); return; }
+      clearInterval(t);
+      spiker(`<span class="k" style="font-size:7rem">KOŞ!</span>`);
+      yarisBaslat();
+    }, 1000);
+  }
+
+  function yarisBaslat() {
+    faz = "yaris"; lider = null; sonSpiker = Date.now(); yarisBasi = Date.now();
+    fazYaz("YARIŞ", true);
+    $("#bilgi-yazi").innerHTML = "Atın varsa <b>chat'e yaz</b>, yazdıkça hızlanır!";
+    clearInterval(zaman);
+    zaman = setInterval(yarisTik, 100);
+  }
+
+  function yarisTik() {
+    const simdi = Date.now();
+    for (const at of atlar) {
+      at.form = Math.min(1.45, Math.max(.55, at.form + (Math.random() - .5) * .12)); // form iniş çıkışı
+      const hizli = simdi - at.sonYazi < 3000;
+      at.el.classList.toggle("hizli", hizli);
+      at.p += (.42 * at.form + (hizli ? .28 * A.tezahuratEtkisi : 0)) * (.85 + Math.random() * .3);
+      konumla(at);
+    }
+    const sirali = atlar.slice().sort((a, b) => b.p - a.p);
+    $("#ilerleme").style.width = Math.min(100, sirali[0].p) + "%";
+    $("#bilgi-sag").innerHTML = `Önde: <b style="color:${sirali[0].renk}">${kacir(sirali[0].ad)}</b>`;
+    if (sirali[0] !== lider) {
+      lider = sirali[0];
+      if (simdi - yarisBasi > 2000 && simdi - sonSpiker > 1500) {
+        sonSpiker = simdi;
+        spiker(`<span class="k" style="--renk:${lider.renk}">${kacir(lider.ad)}</span> öne geçti!`);
+      }
+    }
+    if (sirali[0].p >= 100) bitir(sirali);
+  }
+
+  function bitir(sirali) {
+    clearInterval(zaman);
+    faz = "bitti";
+    fazYaz("BİTTİ");
+    const podyum = sirali.slice(0, Math.min(3, sirali.length));
+    const madalya = ["🥇", "🥈", "🥉"];
+    podyum.forEach((at, i) => {
+      const p = A.puanlar[i] || 0;
+      if (p) skor[at.ad] = (skor[at.ad] || 0) + p;
+      at.el.classList.add("podyum");
+    });
+    skorKaydet();
+    skorCiz(podyum.map(a => a.ad));
+    $("#pist").classList.add("bitti");
+    spiker(podyum.map((at, i) =>
+      `<span class="pd">${madalya[i]} <span class="k" style="--renk:${at.renk}">${kacir(at.ad)}</span> <span class="p">+${A.puanlar[i] || 0}</span></span>`).join(""));
+    konfeti([podyum[0].renk, "#53fc18", "#ffffff", "#ffd23f"]);
+    let kalan = A.sonrakiYaris;
+    $("#bilgi-yazi").innerHTML = `🏆 <b style="color:${podyum[0].renk}">${kacir(podyum[0].ad)}</b> kazandı!`;
+    const t = setInterval(() => {
+      $("#bilgi-sag").innerHTML = `Yeni yarış <b>${kalan}</b> sn`;
+      $("#ilerleme").style.width = (kalan / A.sonrakiYaris * 100) + "%";
+      if (kalan-- <= 0) { clearInterval(t); katilmaBaslat(); }
+    }, 1000);
+  }
+
+  // ---------- Chat ----------
+  function yetkiliMi(kullanici, rozetler) {
+    const ad = String(kullanici).toLowerCase();
+    if (A.kanal && ad === A.kanal.toLowerCase()) return true;
+    if ((rozetler || []).includes("broadcaster")) return true;
+    if (A.modlarSifirlayabilir !== false && (rozetler || []).includes("moderator")) return true;
+    return (A.yetkililer || []).some(y => String(y).toLowerCase() === ad);
+  }
+
+  function mesajGeldi(kullanici, metin, renk, rozetler) {
+    if (typeof metin !== "string") return;
+    metin = metin.replace(/\[emote:[^\]]*\]/g, " ").trim();
+    const komut = /^!/.test(metin) ? sade(metin.split(/\s+/)[0]) : "";
+    if (komut === "sifirla") {
+      if (!yetkiliMi(kullanici, rozetler)) return;
+      skor = {}; skorKaydet(); skorCiz();
+      bildir(`Skorlar sıfırlandı (${kullanici})`);
+      return;
+    }
+    if (faz === "katilma" && komut && (komut === sade(A.katilmaKomutu) || komut === "katil")) { atEkle(kullanici, renk); return; }
+    if (faz === "yaris") {
+      const at = atlar.find(a => a.ad.toLowerCase() === String(kullanici).toLowerCase());
+      if (at) at.sonYazi = Date.now(); // kendi atını hızlandırır (3 sn boyunca)
+    }
+  }
+
+  // ---------- Test modu: sahte izleyiciler ----------
+  if (TEST) {
+    $("#durum .test").style.display = "inline";
+    const adlar = ["martı34", "kebapsever", "irl_fan", "gezgin", "simitci_ali", "kadikoylu", "yayinkurdu", "zeynep_k", "pepsihepsi", "turbo_tosun"];
+    const renkler = ["#FF9D00", "#00CCB3", "#BC66FF", "#FF6B6B", "#93EBFF", null];
+    setInterval(() => {
+      if (faz === "katilma" && atlar.length < 7 && Math.random() < .5) {
+        const ad = adlar.find(a => !atlar.some(x => x.ad === a));
+        if (ad) mesajGeldi(ad, "!at", renkler[Math.floor(Math.random() * renkler.length)], []);
+      }
+      if (faz === "yaris") atlar.forEach((at, i) => { if (Math.random() < .12 + i * .02) mesajGeldi(at.ad, "koş!"); });
+    }, 500);
+  }
+
+  skorCiz();
+  katilmaBaslat();
+  KickChat.baglan({
+    kanal: A.kanal, chatroomId: A.chatroomId, mesaj: mesajGeldi,
+    durum: (bagli, yazi) => { $("#durum").classList.toggle("bagli", bagli); $("#durum span").textContent = yazi; },
+  });
+  window.__atYarisi = { mesajGeldi, durum: () => ({ faz, atlar: atlar.map(a => ({ ad: a.ad, p: Math.round(a.p) })) }) };
+})();
+</script>
+</body>
+</html>
